@@ -1,0 +1,94 @@
+📆 Cronograma Realista (7 dias)
+🟢 Dia 1 – Base do Synth
+
+Criar projeto Next
+
+Implementar Web Audio API
+
+1 oscilador funcionando
+
+Botão Play/Stop
+
+Teclado simples
+
+Objetivo: áudio funcionando.
+
+🟢 Dia 2 – Controles reais
+
+Troca de waveform
+
+ADSR
+
+Filtro low-pass
+
+Volume control
+
+UI organizada
+
+Objetivo: parecer produto real.
+
+🟢 Dia 3 – Estrutura profissional
+
+Organização de pastas
+
+Separar Audio Engine da UI
+
+Criar hook customizado para áudio
+
+Melhorar performance
+
+Testes básicos
+
+Objetivo: código limpo e defensável.
+
+🟢 Dia 4 – Backend + Stripe
+
+Criar rota de pagamento
+
+Criar “Plano Pro”
+
+Liberar recurso extra após pagamento (ex: segundo oscilador)
+
+Webhook Stripe
+
+Objetivo: mostrar produto monetizável.
+
+🟢 Dia 5 – Docker + Deploy
+
+Dockerfile
+
+Docker Compose
+
+Deploy no VPS
+
+Nginx
+
+SSL
+
+Objetivo: mostrar que você sabe colocar em produção.
+
+🟢 Dia 6 – Refinamento
+
+Melhorar UI
+
+Melhorar UX
+
+Ajustar bugs
+
+Criar landing page simples
+
+🟢 Dia 7 – Documentação Técnica
+
+Isso é o que mais vai impressionar ele.
+
+Você vai entregar:
+
+README técnico
+
+Diagrama simples da arquitetura
+
+Explicação de decisões técnicas
+
+Justificativa de uso (ou não) de IA
+
+Isso mostra maturidade.
