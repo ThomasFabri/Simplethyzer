@@ -177,4 +177,4 @@ Nao foi usada para substituir validacao tecnica:
 
 - Sessao paga atualmente persistida em memoria no processo (`proStore`): suficiente para demo, nao para alta disponibilidade.
 - Producao robusta pede persistencia externa (Redis/Postgres) para eventos de pagamento.
-- Se credenciais forem expostas, revogar e gerar novas imediatamente
+- Se credenciais forem expostas, revogar e gerar novas imediatamente.
