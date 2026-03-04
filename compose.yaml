@@ -14,7 +14,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=apps_default"
-      - "traefik.http.routers.simplethyzer.rule=Host(`SEU_SUBDOMINIO.SEUDOMINIO.COM`)"
+      - "traefik.http.routers.simplethyzer.rule=Host(`${TRAEFIK_HOST}`)"
       - "traefik.http.routers.simplethyzer.entrypoints=websecure"
       - "traefik.http.routers.simplethyzer.tls=true"
       - "traefik.http.routers.simplethyzer.tls.certresolver=letsencrypt"

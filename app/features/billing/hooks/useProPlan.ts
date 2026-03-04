@@ -11,6 +11,7 @@ export function useProPlan() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
 
   const refreshStatus = useCallback(async () => {
     try {
@@ -20,6 +21,9 @@ export function useProPlan() {
       const data = (await response.json()) as ProStatusResponse;
       setIsPro(Boolean(data.isPro));
       setError(null);
+      if (data.isPro) {
+        setInfo("Plano Pro ativo.");
+      }
     } catch (err) {
       console.error(err);
       setError("Nao foi possivel verificar o plano.");
@@ -38,6 +42,7 @@ export function useProPlan() {
         });
         if (!response.ok) throw new Error("Failed to confirm checkout");
         await refreshStatus();
+        setInfo("Pagamento confirmado. Recursos Pro liberados.");
       } catch (err) {
         console.error(err);
         setError("Pagamento detectado, mas a ativacao do Pro falhou.");
@@ -55,6 +60,7 @@ export function useProPlan() {
     try {
       setIsCheckoutLoading(true);
       setError(null);
+      setInfo("Redirecionando para checkout seguro Stripe...");
       const response = await fetch("/api/stripe/checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -67,6 +73,7 @@ export function useProPlan() {
     } catch (err) {
       console.error(err);
       setError("Nao foi possivel iniciar o checkout.");
+      setInfo(null);
       setIsCheckoutLoading(false);
     }
   }, []);
@@ -83,6 +90,12 @@ export function useProPlan() {
     if (checkoutState === "success" && sessionId) {
       void confirmCheckout(sessionId);
     }
+    if (checkoutState === "cancelled") {
+      setInfo("Checkout cancelado. Voce pode tentar novamente a qualquer momento.");
+      const currentUrl = new URL(window.location.href);
+      currentUrl.searchParams.delete("checkout");
+      window.history.replaceState({}, "", currentUrl.toString());
+    }
   }, [confirmCheckout]);
 
   return {
@@ -90,6 +103,7 @@ export function useProPlan() {
     isLoading,
     isCheckoutLoading,
     error,
+    info,
     startCheckout,
     refreshStatus,
   };

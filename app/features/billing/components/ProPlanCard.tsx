@@ -5,6 +5,7 @@ type ProPlanCardProps = {
   isLoading: boolean;
   isCheckoutLoading: boolean;
   error: string | null;
+  info: string | null;
   onUpgrade: () => void;
 };
 
@@ -13,6 +14,7 @@ export default function ProPlanCard({
   isLoading,
   isCheckoutLoading,
   error,
+  info,
   onUpgrade,
 }: ProPlanCardProps) {
   return (
@@ -41,6 +43,8 @@ export default function ProPlanCard({
           </button>
         )}
       </div>
+      {isLoading ? <p className="mt-3 text-sm text-zinc-400">Verificando status do plano...</p> : null}
+      {info ? <p className="mt-3 text-sm text-cyan-300">{info}</p> : null}
       {error ? <p className="mt-3 text-sm text-rose-300">{error}</p> : null}
     </section>
   );
