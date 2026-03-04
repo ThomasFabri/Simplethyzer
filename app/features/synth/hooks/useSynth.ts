@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { AdsrSettings } from "../types";
 import {
   getIsPlaying,
   getSynthSettings,
   noteOff,
   noteOn,
+  setProEnabled,
   setAdsr,
   setFilterCutoff,
   setFrequency,
@@ -65,10 +66,13 @@ export function useSynth() {
     setPlaying(false);
   }, []);
 
-  return {
-    playing,
-    settings,
-    actions: {
+  const handleSetProEnabled = useCallback((enabled: boolean) => {
+    setSettings((prev) => ({ ...prev, proEnabled: enabled }));
+    setProEnabled(enabled);
+  }, []);
+
+  const actions = useMemo(
+    () => ({
       togglePlay,
       playNote,
       releaseNote,
@@ -77,6 +81,24 @@ export function useSynth() {
       handleVolumeChange,
       handleCutoffChange,
       handleAdsrChange,
-    },
+      handleSetProEnabled,
+    }),
+    [
+      togglePlay,
+      playNote,
+      releaseNote,
+      handleFrequencyChange,
+      handleWaveformChange,
+      handleVolumeChange,
+      handleCutoffChange,
+      handleAdsrChange,
+      handleSetProEnabled,
+    ],
+  );
+
+  return {
+    playing,
+    settings,
+    actions,
   };
 }

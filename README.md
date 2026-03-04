@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Synth Demo
 
-## Getting Started
+Projeto Next.js com Web Audio API e fluxo de monetizacao com Stripe (Plano Pro).
 
-First, run the development server:
+## Desenvolvimento
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abra [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Variaveis de ambiente
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Copie `.env.example` para `.env` e preencha:
 
-## Learn More
+- `NEXT_PUBLIC_APP_URL`
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- `STRIPE_PRO_PRICE_ID`
+- `PRO_COOKIE_SECRET` (opcional)
 
-To learn more about Next.js, take a look at the following resources:
+## Stripe
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `POST /api/stripe/checkout-session`: cria sessao de checkout
+- `POST /api/stripe/confirm`: confirma sessao paga e ativa cookie Pro
+- `POST /api/stripe/webhook`: recebe eventos Stripe
+- `GET /api/pro/status`: retorna status do plano do usuario atual
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Para testar webhook localmente com Stripe CLI:
 
-## Deploy on Vercel
+```bash
+stripe listen --forward-to localhost:3000/api/stripe/webhook
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Qualidade
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run lint
+npm run test
+npm run build
+```
+
+## Docker
+
+Build e execucao local com containers:
+
+```bash
+docker compose build
+docker compose up -d
+```
+
+## Deploy VPS (Nginx + SSL)
+
+Pre-requisitos:
+- Docker e Docker Compose instalados no VPS
+- DNS do dominio apontando para IP do VPS
+- portas `80` e `443` liberadas no firewall
+
+Passos:
+1. Copie o projeto para o servidor e configure `.env`.
+2. Ajuste permissoes do script:
+```bash
+chmod +x infra/scripts/init-letsencrypt.sh
+```
+3. Gere certificado inicial e configure nginx:
+```bash
+./infra/scripts/init-letsencrypt.sh seu-dominio.com seu-email@dominio.com
+```
+4. Suba stack completa:
+```bash
+docker compose up -d
+```
+
+Observacoes:
+- O arquivo [infra/nginx/conf.d/app.conf](infra/nginx/conf.d/app.conf) faz proxy para o app Next em `app:3000`.
+- O servico `certbot` no `compose.yaml` executa renovacao periodica dos certificados.
