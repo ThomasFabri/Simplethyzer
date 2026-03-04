@@ -2,98 +2,54 @@
 
 Synth web com Web Audio API, monetizacao via Stripe e deploy em Docker.
 
-## Objetivo do projeto
+## Visao geral
 
-Demonstrar capacidade de entregar produto full-stack:
-- Frontend interativo de audio em tempo real
-- Backend de pagamentos com Stripe
-- Feature gating real (Plano Pro)
-- Deploy em producao com reverse proxy TLS
+Objetivo do projeto:
+- Audio em tempo real no navegador
+- Fluxo de pagamento com Stripe
+- Plano Pro com recurso premium real (2o oscilador)
+- Deploy reproduzivel em VPS
 
-## Stack
-
-- Next.js 16 (App Router, TypeScript)
+Stack principal:
+- Next.js 16 + TypeScript
 - Web Audio API
-- Stripe API (checkout + webhook)
+- Stripe API
 - Docker + Docker Compose
-- Traefik (no servidor atual) para TLS e roteamento
-- Vitest (testes unitarios basicos)
+- Traefik (reverse proxy/TLS no servidor)
+- Vitest + ESLint
 
 ## Funcionalidades
 
-- Oscilador principal com:
-  - Waveform (`sine`, `square`, `sawtooth`, `triangle`)
-  - ADSR (`attack`, `decay`, `sustain`, `release`)
-  - Filtro low-pass
-  - Volume
-- Teclado de notas com ADSR por tecla (`noteOn` / `noteOff`)
-- Plano Pro:
-  - Checkout Stripe
-  - Confirmacao de sessao paga
-  - Cookie assinado de autorizacao
-  - Segundo oscilador habilitado para usuarios Pro
+- Oscilador principal com waveform, ADSR, low-pass e volume
+- Teclado com `noteOn`/`noteOff` (ADSR por tecla)
+- Upgrade para Plano Pro via Stripe Checkout
+- Confirmacao de pagamento e status Pro
+- Segundo oscilador habilitado somente para Pro
 
-## Arquitetura (alto nivel)
+## Arquitetura
 
-```mermaid
-flowchart TD
-  U[Usuario] --> UI[Next.js UI]
-  UI --> S[useSynth Hook]
-  S --> E[Synth Engine Web Audio]
-  UI --> P[useProPlan Hook]
-  P --> API1[/api/pro/status]
-  P --> API2[/api/stripe/checkout-session]
-  P --> API3[/api/stripe/confirm]
-  Stripe[Stripe Checkout + Webhook] --> API4[/api/stripe/webhook]
-  API3 --> C[Cookie Pro assinado]
-  API4 --> M[Marcacao de sessao paga]
-  C --> API1
-  API1 --> P
-  P --> S
-  S --> E2[Oscilador 2 Pro]
-```
-
-Diagrama em arquivo separado: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-
-## Estrutura de pastas (resumo)
-
-```txt
-app/
-  api/
-    pro/status
-    stripe/checkout-session
-    stripe/confirm
-    stripe/webhook
-  features/
-    synth/
-      audio/
-      components/
-      hooks/
-      types.ts
-    billing/
-      components/
-      hooks/
-      server/
-```
+Diagrama e fluxo tecnico:
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
 ## Variaveis de ambiente
 
 Copie `.env.example` para `.env`:
 
-- `NEXT_PUBLIC_APP_URL` (em producao: `https://seu-dominio`)
+- `NEXT_PUBLIC_APP_URL`
+- `TRAEFIK_HOST`
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
 - `STRIPE_PRO_PRICE_ID`
 - `PRO_COOKIE_SECRET` (recomendado em producao)
 
-## Rodando local
+## Rodar local
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Testes e qualidade
+Qualidade:
 
 ```bash
 npm run lint
@@ -101,80 +57,90 @@ npm run test
 npm run build
 ```
 
-## Endpoints principais
+## Endpoints
 
 - `POST /api/stripe/checkout-session`
 - `POST /api/stripe/confirm`
 - `POST /api/stripe/webhook`
 - `GET /api/pro/status`
 
-## Deploy (servidor atual com Traefik)
+## Deploy manual no VPS
 
-No servidor atual, as portas `80/443` ja sao gerenciadas por Traefik global.
-Por isso, o `compose.yaml` deste projeto sobe apenas o `app` com labels Traefik.
+Pre-requisitos:
+- Docker e Docker Compose instalados
+- DNS apontando para o IP do VPS
+- Traefik global no servidor com `websecure` + `letsencrypt`
 
 Passos:
 
-1. Clonar projeto no servidor
-2. Configurar `.env`
-3. Subir:
+1. Clonar o projeto no servidor:
+```bash
+git clone https://github.com/<owner>/<repo>.git /root/Simplethyzer
+cd /root/Simplethyzer
+```
 
+2. Criar `.env`:
+```bash
+cp .env.example .env
+```
+
+3. Ajustar valores de producao no `.env`:
+- `NEXT_PUBLIC_APP_URL=https://simplethyzer.seudominio.com`
+- `TRAEFIK_HOST=simplethyzer.seudominio.com`
+- chaves Stripe de producao/teste conforme ambiente
+
+4. Subir:
 ```bash
 docker compose up -d --build
 ```
 
-4. Verificar:
-
+5. Verificar:
 ```bash
 docker compose ps
 docker logs apps-traefik-1 --since=5m | grep -Ei "simplethyzer|acme|letsencrypt|error"
 ```
 
-## CI/CD simples (GitHub Actions -> VPS)
+## CI/CD (GitHub Actions -> VPS)
 
-Workflow: [.github/workflows/deploy.yml](.github/workflows/deploy.yml)
+Workflow:
+- `.github/workflows/deploy.yml`
 
-Comportamento:
-- Roda `npm ci` + `npm run lint`
-- Se passar, conecta via SSH no VPS
-- Executa `git pull` e `docker compose up -d --build`
+Fluxo:
+1. Trigger em `push` na `main` e PR mergeada na `main`
+2. Executa `npm ci` + `npm run lint`
+3. Se passar, conecta via SSH no VPS
+4. Executa `git pull` + `docker compose up -d --build`
 
-Secrets necessarios no GitHub (Repository Secrets):
-- `VPS_HOST` (IP ou dominio do servidor)
-- `VPS_USER` (ex.: `root` ou usuario de deploy)
-- `VPS_SSH_KEY` (chave privada SSH em formato PEM/OpenSSH)
+Secrets necessarios no GitHub:
+- `VPS_HOST`
+- `VPS_USER`
+- `VPS_SSH_KEY` (chave privada completa, multiline)
 - `VPS_PORT` (opcional, default 22)
 
-Script executado no servidor:
-- [scripts/deploy.sh](scripts/deploy.sh)
+## Evitar conflitos de configuracao no servidor
+
+Para nao quebrar deploy com mudancas locais:
+
+1. Nunca editar `.env.example` no servidor
+2. Manter segredos somente em `.env` (ja ignorado pelo git)
+3. Se precisar override local de compose, criar `compose.server.yaml` no VPS
+4. Rodar deploy com:
+```bash
+docker compose -f compose.yaml -f compose.server.yaml up -d --build
+```
+
+`compose.server.yaml` esta no `.gitignore`, entao nao sobe para o repositorio.
 
 ## Decisoes tecnicas
 
-1. **Feature-first structure**
-   - Separacao por dominio (`synth`, `billing`) facilita evolucao e defesa tecnica.
-2. **Audio engine desacoplado da UI**
-   - Web Audio em modulo dedicado + hook `useSynth` para coordenar estado da interface.
-3. **Monetizacao com desbloqueio real**
-   - Pro nao e apenas visual; segundo oscilador depende de status de plano confirmado.
-4. **Cookie assinado para status Pro**
-   - Evita confiar apenas em estado client-side.
-5. **Deploy conteinerizado**
-   - Entrega reproduzivel em VPS e padrao de mercado.
-
-## Justificativa de uso de IA
-
-IA foi usada para acelerar:
-- ideacao de arquitetura inicial
-- checklist de entregas por dia
-- refinamentos de copy/documentacao
-
-Nao foi usada para substituir validacao tecnica:
-- logica de audio, fluxo de pagamento e deploy foram criados e testados manualmente
-- lint/test/build executados a cada etapa
-- bugs de infraestrutura (TLS, rede e proxy) foram tratados via diagnostico real
+1. Estrutura por feature (`synth`, `billing`) para escalabilidade.
+2. Engine de audio separada da UI para testabilidade.
+3. Hook customizado para coordenar estado e efeitos de audio.
+4. Plano Pro com desbloqueio real no engine (nao apenas visual).
+5. Pipeline de deploy simples com validacao de lint antes de publicar.
 
 ## Pendencias conhecidas
 
-- Sessao paga atualmente persistida em memoria no processo (`proStore`): suficiente para demo, nao para alta disponibilidade.
-- Producao robusta pede persistencia externa (Redis/Postgres) para eventos de pagamento.
-- Se credenciais forem expostas, revogar e gerar novas imediatamente
+- `proStore` em memoria e suficiente para demo, nao para alta disponibilidade.
+- Em ambiente de producao robusto, usar persistencia externa (Redis/Postgres).
+- Se credenciais forem expostas, revogar e gerar novas imediatamente.
