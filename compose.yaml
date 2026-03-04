@@ -13,11 +13,15 @@ services:
       - apps_default
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=apps_default"
       - "traefik.http.routers.simplethyzer.rule=Host(`SEU_SUBDOMINIO.SEUDOMINIO.COM`)"
       - "traefik.http.routers.simplethyzer.entrypoints=websecure"
       - "traefik.http.routers.simplethyzer.tls=true"
       - "traefik.http.routers.simplethyzer.tls.certresolver=letsencrypt"
       - "traefik.http.services.simplethyzer.loadbalancer.server.port=3000"
+    environment:
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
 
 networks:
   apps_default:
