@@ -47,5 +47,10 @@ jobs:
           port: ${{ secrets.VPS_PORT || 22 }}
           script: |
             set -e
-            chmod +x ~/Simplethyzer/scripts/deploy.sh
-            PROJECT_DIR=~/Simplethyzer BRANCH=main ~/Simplethyzer/scripts/deploy.sh
+            PROJECT_DIR=/root/Simplethyzer
+            BRANCH=main
+            cd "$PROJECT_DIR"
+            git fetch origin "$BRANCH"
+            git checkout "$BRANCH"
+            git pull --ff-only origin "$BRANCH"
+            docker compose up -d --build
