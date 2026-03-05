@@ -143,4 +143,4 @@ docker compose -f compose.yaml -f compose.server.yaml up -d --build
 
 - `proStore` em memoria e suficiente para demo, nao para alta disponibilidade.
 - Em ambiente de producao robusto, usar persistencia externa (Redis/Postgres).
-- Se credenciais forem expostas, revogar e gerar novas imediatamente.
+- Se credenciais forem expostas, revogar e gerar novas imediatamente
